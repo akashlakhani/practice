@@ -1,0 +1,169 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: "input",
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: homePage(),
+    );
+  }
+}
+
+class homePage extends StatefulWidget {
+  homePage({Key key}) : super(key: key);
+
+  @override
+  _homePageState createState() => _homePageState();
+}
+
+class _homePageState extends State<homePage> {
+  String _selectedParam;
+  String task;
+  int val;
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    var androidinitialize = new AndroidInitializationSettings('app_icon');
+    var iosinitialize = new IOSInitializationSettings();
+    var initializationSettings = new InitializationSettings(
+        android: androidinitialize, iOS: iosinitialize);
+    flutterLocalNotificationsPlugin = new FlutterLocalNotificationsPlugin();
+    flutterLocalNotificationsPlugin.initialize(initializationSettings,
+        onSelectNotification: notificationSelected);
+  }
+
+  Future _showNotification() async {
+    var androidDetails = new AndroidNotificationDetails(
+        "channel ID", "fLUTTER nOTIFICATION", "THIS IS a tEST",
+        importance: Importance.max);
+    var iosDetails = new IOSNotificationDetails();
+    var generalNotificationDetails =
+        new NotificationDetails(android: androidDetails, iOS: iosDetails);
+
+    // await flutterLocalNotificationsPlugin.show(
+    //     0, "TITLE", "THIS IS NOTIFIACTION", generalNotificationDetails,
+    //     payload: "task");
+    var schedulTime;
+    if (_selectedParam == "Hours") {
+      schedulTime = DateTime.now().add(Duration(hours: val));
+    } else if (_selectedParam == "Minutes") {
+      schedulTime = DateTime.now().add(Duration(minutes: val));
+    } else if (_selectedParam == "Seconds") {
+      schedulTime = DateTime.now().add(Duration(seconds: val));
+    }
+
+    await flutterLocalNotificationsPlugin.schedule(
+      1,
+      "Times Up!",
+      task,
+      schedulTime,
+      generalNotificationDetails,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Input"),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextField(
+                style: TextStyle(fontSize: 20.0),
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: (_val) {
+                  task = _val;
+                },
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                DropdownButton(
+                  value: _selectedParam,
+                  items: [
+                    DropdownMenuItem(
+                      child: Text("Seconds"),
+                      value: "Seconds",
+                    ),
+                    DropdownMenuItem(
+                      child: Text("Minutes"),
+                      value: "Minutes",
+                    ),
+                    DropdownMenuItem(
+                      child: Text("Hours"),
+                      value: "Hours",
+                    ),
+                  ],
+                  hint: Text("Select your Field"),
+                  onChanged: (_val) {
+                    setState(() {
+                      _selectedParam = _val;
+                    });
+                  },
+                ),
+                DropdownButton(
+                  value: val,
+                  items: [
+                    DropdownMenuItem(
+                      child: Text("1"),
+                      value: 1,
+                    ),
+                    DropdownMenuItem(
+                      child: Text("2"),
+                      value: 2,
+                    ),
+                    DropdownMenuItem(
+                      child: Text("3"),
+                      value: 3,
+                    ),
+                    DropdownMenuItem(
+                      child: Text("4"),
+                      value: 4,
+                    ),
+                  ],
+                  hint: Text("Select Value"),
+                  onChanged: (_val) {
+                    setState(() {
+                      val = _val;
+                    });
+                  },
+                ),
+              ],
+            ),
+            ElevatedButton(
+                onPressed: _showNotification, child: Text("Push Notification"))
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future notificationSelected(String payload) async {
+    showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+              content: Text("😊😊 $payload"),
+            ));
+  }
+}
